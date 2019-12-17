@@ -19,7 +19,9 @@ public class NGramGenerator{
 			BufferedReader myReader= new BufferedReader(new FileReader(inputDir));
 			String myRead;
 			
-			while((myRead= myReader.readLine())!= null)	inputLines.add(StrProcessing.clearAllExceptDot(myRead));
+			while((myRead= myReader.readLine())!= null) {
+				inputLines.add(StrProcessing.clearAll(myRead));
+			}
 			
 			myReader.close();
 		}catch (Exception e) {
@@ -30,8 +32,13 @@ public class NGramGenerator{
 			int n= ns[en];
 			Map<String, Integer> outputGrams= new HashMap<>();
 			
-			for(String inputLine: inputLines) {
-				String[] inputChars= inputLine.split(" ");
+			String full= inputLines.get(0).trim();
+			for(int i= 1; i< inputLines.size(); i++)	full+= " "+ inputLines.get(i).trim();
+			while(full.contains("  "))	full= full.replaceAll("  ", " ");
+			
+//			for(String inputLine: inputLines) {
+//				String[] inputChars= inputLine.split(" ");
+				String[] inputChars= full.split(" ");
 				
 				for(int i= 0; i< inputChars.length- (n- 1); i++) {
 					String phrase= inputChars[i];
@@ -40,10 +47,10 @@ public class NGramGenerator{
 					if(outputGrams.containsKey(phrase))	outputGrams.replace(phrase, outputGrams.get(phrase)+ 1);
 					else	outputGrams.put(phrase, 1);
 				}
-			}
+//			}
 			
 			try {
-				BufferedWriter myWriter= new BufferedWriter(new FileWriter(outputDir+ n+ ".txt"));
+				BufferedWriter myWriter= new BufferedWriter(new FileWriter(outputDir+ "\\gram_"+ n+ ".txt"));
 				
 				for(Map.Entry<String, Integer> entry: outputGrams.entrySet()) {
 					myWriter.write(entry.getKey()+ "="+ entry.getValue());
