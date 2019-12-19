@@ -1,7 +1,10 @@
 package backend.generator;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -16,14 +19,17 @@ import edu.stanford.nlp.tagger.maxent.MaxentTagger;
 //	4 is for bug fixing
 //	5 Finish sentences before appending stuff
 public class Generator5{
+	private static int wordSinceLastEnding= 0;
 
-	public static String generateStatement(int charLimit, String givenWord, String inputDir){
+	public static String generateStatement(int charLimit, String givenWord, String inputDir) throws FileNotFoundException{
 		List<String> statement= new ArrayList<>();
+		wordSinceLastEnding= 0;
 		for(String str: givenWord.split(" "))	statement.add(str.toLowerCase());
 
 		List<NGram> nGrams= IO.readNGrams(inputDir);
 		List<POSEntity> posList= IO.readPOS(inputDir);
-		MaxentTagger tagger= new MaxentTagger("models\\english-bidirectional-distsim.tagger");
+		InputStream is= new FileInputStream(new File("models\\english-bidirectional-distsim.tagger"));
+		MaxentTagger tagger= new MaxentTagger(is);
 		List<String> startList= IO.readStart(inputDir);
 		List<String> endList= IO.readEnd(inputDir);
 		
@@ -60,6 +66,7 @@ public class Generator5{
 			List<NGram> potentialAdditions= new ArrayList<>();
 			boolean canEnd= canEnd(statement, tagger, endList);
 			boolean canStart= canStart(statement, tagger, startList);
+			if(canEnd)	wordSinceLastEnding= 0;
 			System.out.println(canStart+ "-"+ canEnd);
 			
 			if(!canStart) {
@@ -68,7 +75,14 @@ public class Generator5{
 			}
 			else if(!canEnd) {
 				System.out.println("Adding to the bot");
-				potentialAdditions= finishEnd(nGrams, posList, charLimit, statement, tagger, startList, endList);
+				if(wordSinceLastEnding> 2) {
+					Random r= new Random();
+					if(r.nextInt(10)> wordSinceLastEnding)	potentialAdditions= finishEnd(nGrams, posList, charLimit, statement, tagger, startList, endList);
+					else	System.out.println("We broke because too long");
+				}
+				else	potentialAdditions= finishEnd(nGrams, posList, charLimit, statement, tagger, startList, endList);
+				
+				wordSinceLastEnding++;
 			}
 			else {
 				//	There is a chance it might stop here
@@ -173,13 +187,14 @@ public class Generator5{
 							if(!taggedString[n].split("_")[1].equals(posEntity.getWords()[n]))	continue loop;
 						}
 						posInstances++;
+						if(posInstances!= 0)	break;
 					}
 					if(posInstances== 0)	continue;	//	Skip if it doesn't grammatically make sense
 					
 					//	Add to list
 					potentialAdditions.add(nGram);
 				}
-				if(potentialAdditions.size()> 1000)	return potentialAdditions;
+				if(potentialAdditions.size()> 250)	return potentialAdditions;
 			}
 		}
 		
@@ -248,6 +263,7 @@ public class Generator5{
 							if(!taggedString[taggedString.length- n].split("_")[1].equals(posEntity.getWords()[posEntity.getWords().length- n]))	continue loop;
 						}
 						posInstances++;
+						if(posInstances!= 0)	break;
 					}
 					if(posInstances== 0)	continue;
 					//	Finish POS part
@@ -255,7 +271,7 @@ public class Generator5{
 					
 					potentialAdditions.add(nGram);
 				}
-				if(potentialAdditions.size()> 1000)	return potentialAdditions;
+				if(potentialAdditions.size()> 250)	return potentialAdditions;
 			}
 		}
 		
@@ -266,19 +282,26 @@ public class Generator5{
 		String phrase= statement.get(0);
 		// Get all the possible nGrams
 		List<NGram> potentialAdditions= new ArrayList<>();
-		loop:
 		for (NGram nGram : nGrams)
 			if (nGram.getPhrase().contains(phrase)) {
+//				System.out.println(potentialAdditions.size());
+//				System.out.println("0-"+ nGram.getPhrase());
 				boolean wordAvailable= false;
 				for(String word: nGram.getWords()) {
 					if(word.equals(phrase))	wordAvailable= true;
 				}
 				if(!wordAvailable)	continue;
-				
+//				System.out.println("1-"+ nGram.getPhrase());
 				String[] taggedString= tagger.tagString(nGram.getPhrase()).split(" ");
 				
+				loop:
 				for(POSEntity posEntity: posList) {
-					if(posEntity.getN()!= nGram.getN())	continue;
+					if(posEntity.getN()!= nGram.getN()) {
+//						System.out.println(posEntity.getPhrase()+ "-"+ posEntity.getN());
+//						System.out.println(nGram.getN()+ "-"+ posList.size());
+//						System.out.println("---------------------");
+						continue;
+					}
 					for(int n= 0; n< posEntity.getN(); n++) {
 						if(!taggedString[n].split("_")[1].equals(posEntity.getWords()[n]))	continue loop;
 					}

@@ -12,17 +12,17 @@ public class mainTester{
 		// System.out.println(StrProcessing.clearAllExceptDot("hello , what are you.
 		// doing?"));
 
-//		 NGramGenerator.generateNGramFile("D:\\ZuluStatementGenerator\\input.txt", "D:\\ZuluStatementGenerator\\", 2, 3, 4);
-//		 POSGenerator.generateNPOS("D:\\ZuluStatementGenerator\\input.txt", "D:\\ZuluStatementGenerator\\", 2, 3, 4, 5, 6);
+//		 NGramGenerator.generateNGramFileOne("D:\\ZuluStatementGenerator\\input.txt", "D:\\ZuluStatementGenerator\\", 2, 3, 4);
+//		 POSGenerator.generateNPOSOne("D:\\ZuluStatementGenerator\\input.txt", "D:\\ZuluStatementGenerator\\", 2, 3, 4, 5);
 //		ESGenerator.generateESFiles("D:\\ZuluStatementGenerator\\input.txt", "D:\\ZuluStatementGenerator\\");
 		
-		String result;
+		String result= "A new era of prosperity will finally begin.";
 		for(int i= 0; i< 2; i++) {
-			result= Generator5.generateStatement(255, "he", "D:\\ZuluStatementGenerator\\");
+			result= Generator5.generateStatement(255, "america", "D:\\ZuluStatementGenerator\\");
 			System.out.println(result);
 		}
 		
-		
+//		new Max
 //		MaxentTagger tagger= new MaxentTagger("models\\english-bidirectional-distsim.tagger");
 //		System.out.println(tagger.tagString(result));
 	}
